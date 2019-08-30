@@ -16,7 +16,7 @@ public class Account {
 
 	public Double getBalance() {
 		if (access) {
-			return balance;
+			return Math.round(balance * 100.0) / 100.0;
 		}
 
 		return 0.0;
@@ -33,7 +33,7 @@ public class Account {
 	}
 
 	public void withdraw(double amount) {
-		if (access) {
+		if (access && balance - amount >= 0) {
 			balance -= amount;
 		}
 	}
@@ -42,5 +42,9 @@ public class Account {
 		if (access) {
 			balance += amount;
 		}
+	}
+
+	public void logout() {
+		access = false;
 	}
 }

@@ -9,6 +9,7 @@ import javax.swing.JTextField;
 import javax.swing.JTextArea;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Image;
 
 public class Screen extends JPanel implements ActionListener {
 	private JTextField nameJTextField;
@@ -25,17 +26,19 @@ public class Screen extends JPanel implements ActionListener {
 	private Account a4;
 	private Account a5;
 	private ArrayList<Account> accounts;
-	private Account currentAccount;	
+	private Account currentAccount;
+	private Image profilePic;
+	private boolean loggedIn;
 
 	public Screen() {
 		setLayout(null);
 		setFocusable(true);
 
-		a1 = new Account("Jennifer", 999.99, 1234);
-		a2 = new Account("Jose", 500.01, 4321);
-		a3 = new Account("Adam", 1.10, 5678);
-		a4 = new Account("Sally", 5.20, 1357);
-		a5 = new Account("Michael", 1000.00, 2468);
+		a1 = new Account("Jennifer", 999.99, 1234, "images/jennifer.jpg");
+		a2 = new Account("Jose", 500.01, 4321, "images/jose.png");
+		a3 = new Account("Adam", 1.15, 5678, "images/adam.jpg");
+		a4 = new Account("Sally", 5.28, 1357, "images/sally.jpg");
+		a5 = new Account("Michael", 1000.56, 2468, "images/michael.jpg");
 
 		accounts = new ArrayList<Account>();
 		accounts.add(a1);
@@ -84,7 +87,7 @@ public class Screen extends JPanel implements ActionListener {
 		depositJButton.addActionListener(this);
 		depositJButton.setVisible(false);
 
-		currentAccount = null;
+		loggedIn = false;
 	}
 
 	public Dimension getPreferredSize() {
@@ -96,10 +99,15 @@ public class Screen extends JPanel implements ActionListener {
 
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, 800, 450);
+
+		if (loggedIn) {
+			profilePic = profilePic.getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+			g.drawImage(profilePic, 675, 300, null);
+		}
 	}
 
 	public void attemptLogin(int pin, String name) {
-		boolean loggedIn = false;
+		loggedIn = false;
 		for (int i = 0; i < accounts.size(); i++) {
 			accounts.get(i).setAccess(pin, name);
 
@@ -107,6 +115,7 @@ public class Screen extends JPanel implements ActionListener {
 				textDisplayJTextArea.setText("Name: " + accounts.get(i).getName() + "\n" + "Balance: " + accounts.get(i).getBalance());
 				loggedIn = true;
 				currentAccount = accounts.get(i);
+				profilePic = currentAccount.getProfilePic();
 				
 				pinJTextField.setText("");
 				nameJTextField.setText("");
@@ -137,6 +146,7 @@ public class Screen extends JPanel implements ActionListener {
 		amountJTextField.setVisible(false);
 		currentAccount.logout();
 		currentAccount = null;
+		loggedIn = false;
 	}
 
 	public void updateAmount() {

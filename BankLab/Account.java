@@ -1,17 +1,24 @@
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+
 public class Account {
 	private String name;
 	private double balance;
 	private int pin;
 	private boolean access;
+	private String pathToImage;
 
-	public Account(String name, double balance, int pin) {
+	public Account(String name, double balance, int pin, String pathToImage) {
 		this.name = name;
 		this.balance = balance;
 		this.pin = pin;
+		this.pathToImage = pathToImage;
 	}
  
 	public String getName() {
-		return name;	
+		return name;
 	}
 
 	public Double getBalance() {
@@ -46,5 +53,17 @@ public class Account {
 
 	public void logout() {
 		access = false;
+	}
+
+	public Image getProfilePic() {
+		Image profilePic = null;
+
+		try {
+            profilePic = ImageIO.read(new File(pathToImage));
+        } catch (IOException e) {
+            e.printStackTrace();
+		}
+
+		return profilePic;
 	}
 }

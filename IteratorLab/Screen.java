@@ -55,7 +55,6 @@ public class Screen extends JPanel implements ActionListener, MouseListener {
 
     public Screen() {
         setLayout(null);
-        setFocusable(true);
 
         addMoreJButton = new JButton("Add to resume.");
         addMoreJButton.setBounds(360, 50, 200, 200);
@@ -108,10 +107,9 @@ public class Screen extends JPanel implements ActionListener, MouseListener {
         textfield5.setBounds(170, 250, 175, 20);
         this.add(textfield5);
 
-        resumeTextArea = new JTextArea();
+        resumeTextArea = new JTextArea(760, 660);
         resumeTextArea.setEditable(false);
         resumeTextArea.setVisible(false);
-        resumeTextArea.setBounds(20, 20, 760, 660);
         this.add(resumeTextArea);
 
         currentSection = 1;
@@ -131,6 +129,7 @@ public class Screen extends JPanel implements ActionListener, MouseListener {
         scrollPane.setVisible(false);
  
         this.add(scrollPane);
+        this.setFocusable(true);
 
         addMouseListener(this);
     }

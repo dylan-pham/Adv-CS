@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.ListIterator;
-
 import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -12,6 +11,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import java.util.Scanner;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 // for testing purposes
 import java.awt.event.MouseListener;
@@ -19,285 +21,261 @@ import java.awt.event.MouseEvent;
 
 
 public class Screen extends JPanel implements ActionListener, MouseListener {
-    private JButton addMoreJButton;
-    private JButton doneJButton;
-
-    private JLabel label1;
-    private JTextField textfield1;
-    private JLabel label2;
-    private JTextField textfield2;
-    private JLabel label3;
-    private JTextField textfield3;
-    private JLabel label4;
-    private JTextField textfield4;
-    private JLabel label5;
-    private JTextField textfield5;
-
-    private JTextArea resumeTextArea;
-
-    private int currentSection;
-
-    private String name;
-    private String address;
-    private String email;
-    private String objectives;
-    private String skills;
-
-    private ArrayList<Education> schools;
-    private ArrayList<Job> jobs;
-
-    private ListIterator<Education> schoolsIterator;
-    private ListIterator<Job> jobsIterator;
-
-    private String resume;
-
+    private String nameList;
+    private JTextArea nameListTextArea;
     private JScrollPane scrollPane;
+    private ArrayList<Student> students;
+    private ListIterator<Student> studentsIterator;
+    private JLabel statusBar;
+    private JTextField searchBar;
+    private JButton binarySearchButton;
+    private JButton sequentialSearchButton;
+    private JButton bubbleSortButton;
+    private JButton mergeSortButton;
+    private JButton scrambleButton;
+    private int passes;
 
     public Screen() {
         setLayout(null);
         setFocusable(true);
 
-        addMoreJButton = new JButton("Add to resume.");
-        addMoreJButton.setBounds(360, 50, 200, 200);
-        this.add(addMoreJButton);
-        addMoreJButton.addActionListener(this);
+        nameListTextArea = new JTextArea(760, 660);
+        nameListTextArea.setEditable(false);
+        this.add(nameListTextArea);
 
-        doneJButton = new JButton("Done with section.");
-        doneJButton.setBounds(575, 50, 200, 200);
-        this.add(doneJButton);
-        doneJButton.addActionListener(this);
-        doneJButton.setVisible(false);
-
-        label1 = new JLabel("Name:");
-        label1.setBounds(25, 50, 150, 20);
-        this.add(label1);
-
-        textfield1 = new JTextField();
-        textfield1.setBounds(170, 50, 175, 20);
-        this.add(textfield1);
-
-        label2 = new JLabel("Address:");
-        label2.setBounds(25, 100, 150, 20);
-        this.add(label2);
-
-        textfield2 = new JTextField();
-        textfield2.setBounds(170, 100, 175, 20);
-        this.add(textfield2);
-
-        label3 = new JLabel("Email:");
-        label3.setBounds(25, 150, 150, 20);
-        this.add(label3);
-
-        textfield3 = new JTextField();
-        textfield3.setBounds(170, 150, 175, 20);
-        this.add(textfield3);
-
-        label4 = new JLabel("Objectives:");
-        label4.setBounds(25, 200, 150, 20);
-        this.add(label4);
-
-        textfield4 = new JTextField();
-        textfield4.setBounds(170, 200, 175, 20);
-        this.add(textfield4);
-
-        label5 = new JLabel("Skills:");
-        label5.setBounds(25, 250, 150, 20);
-        this.add(label5);
-
-        textfield5 = new JTextField();
-        textfield5.setBounds(170, 250, 175, 20);
-        this.add(textfield5);
-
-        resumeTextArea = new JTextArea();
-        resumeTextArea.setEditable(false);
-        resumeTextArea.setVisible(false);
-        resumeTextArea.setBounds(20, 20, 760, 660);
-        this.add(resumeTextArea);
-
-        currentSection = 1;
-
-        schools = new ArrayList<Education>();
-        jobs = new ArrayList<Job>();
-
-        schoolsIterator = schools.listIterator();
-        jobsIterator = jobs.listIterator();
-
-        resume = "";
-
-        scrollPane = new JScrollPane(resumeTextArea); 
+        scrollPane = new JScrollPane(nameListTextArea); 
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.setBounds(20, 20, 760, 660);
-        scrollPane.setVisible(false);
- 
         this.add(scrollPane);
+
+        students = new ArrayList<Student>();
+
+        try {
+            Scanner fileScanner = new Scanner(new File("names.txt"));
+
+            boolean added = false;
+            while (fileScanner.hasNext()){
+                String firstName = fileScanner.next();
+                String lastName = fileScanner.next();
+
+                studentsIterator = students.listIterator();
+                while (studentsIterator.hasNext()) {
+                    if ((studentsIterator.next().getLastName().compareTo(lastName)) > 0) {
+                        studentsIterator.previous();
+                        studentsIterator.add(new Student(firstName, lastName, (int)(Math.random() * 5 + 14)));
+                        added = true;
+                        break;
+                    }
+                }   
+
+                if (!added)
+                    studentsIterator.add(new Student(firstName, lastName, (int)(Math.random() * 4 + 14)));
+            }
+        
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        
+        updateNameList();
+
+        statusBar = new JLabel("<status bar>");
+        statusBar.setBounds(20, 680, 640, 20);
+        this.add(statusBar);
+
+        searchBar = new JTextField();
+        searchBar.setBounds(20, 720, 140, 20);
+        this.add(searchBar);
+
+        binarySearchButton = new JButton("Binary Search");
+        binarySearchButton.setBounds(170, 720, 140, 20);
+        this.add(binarySearchButton);
+        binarySearchButton.addActionListener(this);
+    
+        sequentialSearchButton = new JButton("Sequential Search");
+        sequentialSearchButton.setBounds(320, 720, 140, 20);
+        this.add(sequentialSearchButton);
+        sequentialSearchButton.addActionListener(this);
+
+        bubbleSortButton = new JButton("Bubble Sort");
+        bubbleSortButton.setBounds(470, 720, 140, 20);
+        this.add(bubbleSortButton);
+        bubbleSortButton.addActionListener(this);
+
+        mergeSortButton = new JButton("Merge Sort");
+        mergeSortButton.setBounds(620, 720, 140, 20);
+        this.add(mergeSortButton);
+        mergeSortButton.addActionListener(this);
+
+        scrambleButton = new JButton("Scramble");
+        scrambleButton.setBounds(320, 760, 140, 20);
+        this.add(scrambleButton);
+        scrambleButton.addActionListener(this);
 
         addMouseListener(this);
     }
 
     public Dimension getPreferredSize() {
-        return new Dimension(800, 700);
-    }
-
-    public void createResume() {
-        resume += "Name: " + name + "\n";
-        resume += "Address: " + address + "\n";
-        resume += "Email: " + email + "\n";
-        resume += "Objectives: " + objectives + "\n";
-        resume += "Skills: " + skills + "\n";
-
-        schoolsIterator = schools.listIterator();
-        while (schoolsIterator.hasNext()) {
-            resume += schoolsIterator.next().toString();
-        }
-        
-        jobsIterator = jobs.listIterator();
-        while (jobsIterator.hasNext()) {
-            resume += jobsIterator.next().toString();
-        }
-
-        resumeTextArea.setVisible(true);
-        resumeTextArea.setText(resume);
-
-        scrollPane.setVisible(true);
-    }
-
-    public void showNextSection() {
-        if (currentSection == 1) {
-            // setting up section 2
-            addMoreJButton.setText("Add more to resume.");
-            doneJButton.setVisible(true);
-            label1.setText("School Name:");
-            label2.setText("Year of Graduation:");
-            label3.setVisible(false);
-            label4.setVisible(false);
-            label5.setVisible(false);
-            textfield3.setVisible(false);
-            textfield4.setVisible(false);
-            textfield5.setVisible(false);
-            textfield1.setText("");
-            textfield2.setText("");
-            textfield3.setText("");
-            textfield4.setText("");
-            textfield5.setText("");
-        }
-
-        if (currentSection == 2) {
-            // setting up section 3
-            label1.setText("Job Title:");
-            label2.setText("Company Name:");
-            label3.setText("Start Date (YYYY-MM):");
-            label4.setText("End Date (YYYY-MM):");
-            label5.setText("Job Description:");
-            label3.setVisible(true);
-            label4.setVisible(true);
-            label5.setVisible(true);
-            textfield1.setText("");
-            textfield2.setText("");
-            textfield3.setVisible(true);
-            textfield4.setVisible(true);
-            textfield5.setVisible(true);
-        }
-
-        if (currentSection == 3) {
-            // setting up section 4
-            label1.setVisible(false);
-            label2.setVisible(false);
-            label3.setVisible(false);
-            label4.setVisible(false);
-            label5.setVisible(false);
-            textfield1.setVisible(false);
-            textfield2.setVisible(false);
-            textfield3.setVisible(false);
-            textfield4.setVisible(false);
-            textfield5.setVisible(false);    
-            addMoreJButton.setVisible(false);
-            doneJButton.setVisible(false);
-
-            createResume();
-        }
-    }
-
-    public void addToSchoolsIterator(Education edu) {
-        boolean added = false;
-
-        schoolsIterator = schools.listIterator();
-        while (schoolsIterator.hasNext()) {
-            if (schoolsIterator.next().getGraduationDate() < edu.getGraduationDate()) {
-                schoolsIterator.previous();
-                schoolsIterator.add(edu);
-                added = true;
-                break;
-            }
-        }
-
-        if (!added)
-            schoolsIterator.add(edu);
-    }
-
-    public void addToJobsIterator(Job job) {
-        boolean added = false;
-
-        jobsIterator = jobs.listIterator();
-        while (jobsIterator.hasNext()) {
-            if (jobsIterator.next().getEndDate().compareTo(job.getEndDate()) < 0) {
-                jobsIterator.previous();
-                jobsIterator.add(job);
-                added = true;
-                break;
-            }
-        }
-
-        if (!added)
-            jobsIterator.add(job);
+        return new Dimension(800, 800);
     }
 
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == addMoreJButton) {
-            if (currentSection == 1) {
-                try {
-                    name = textfield1.getText();
-                    address = textfield2.getText();
-                    email = textfield3.getText();
-                    objectives = textfield4.getText();
-                    skills = textfield5.getText();
-                    
-                    showNextSection();
-                    currentSection = 2;
-                } catch (Exception exception) {
-                    ;
-                }
+        if (e.getSource() == binarySearchButton) {
+            binarySearch(searchBar.getText(), 0, students.size(), 0);
+        } else if (e.getSource() == sequentialSearchButton) {
+            sequentialSearch(searchBar.getText());
+        } else if (e.getSource() == bubbleSortButton) {
+            bubbleSort();
+            updateNameList();
+        } else if (e.getSource() == mergeSortButton) {
+            mergeSort(0, students.size());
+        } else if (e.getSource() == scrambleButton) {
+            scramble();
+            updateNameList();
+        }
+
+    }
+
+    public void updateNameList() {
+        nameList = "";
+
+        for (Student each : students) {
+            nameList += each + "\n";
+        }
+
+        nameListTextArea.setText(nameList);
+    }
+    
+    public void binarySearch(String query, int start, int end, int passes) {
+        bubbleSort(); // array needs to be in order
+
+        passes++;
+        boolean found = false;
+        int middle = (start + end)/2;
+
+        if (start <= end) {
+            if (students.get(middle).getLastName().equals(query)) {
+                found = true;
+            } else if (students.get(middle).getLastName().compareTo(query) > 0) {
+                binarySearch(query, start, middle-1, passes);
+            } else if (students.get(middle).getLastName().compareTo(query) < 0) {
+                binarySearch(query, middle+1, end, passes);
             }
+        }
 
-            if (currentSection == 2) {
-                try {
-                    addToSchoolsIterator(new Education(textfield1.getText(), Integer.parseInt(textfield2.getText())));
+        if (found) {
+            nameListTextArea.setText(students.get(middle).toString());
+            statusBar.setText("Student found | Passes: " + passes + " | Index: " + middle);
+        }
+    }
+    
+    public void sequentialSearch(String query) {
+        int passes = 0;
 
-                    textfield1.setText("");
-                    textfield2.setText("");
-                } catch (Exception exception) {
-                    ;
-                }
+        for (int i = 0; i < students.size(); i++) {
+            passes++;
+
+            if (students.get(i).getLastName().equals(query)) {
+                nameListTextArea.setText(students.get(i).toString());
+                statusBar.setText("Student found | Passes: " + passes + " | Index: " + i);
+                break;
             }
+        }
+    }
 
-            if (currentSection == 3) {
-                try {
-                    addToJobsIterator(new Job(textfield1.getText(), textfield2.getText(), textfield3.getText(), textfield4.getText(), textfield5.getText()));
+    public void bubbleSort() {
+        boolean sorted = false;
+        int passes = 0;
 
-                    textfield1.setText("");
-                    textfield2.setText("");
-                    textfield3.setText("");
-                    textfield4.setText("");
-                    textfield5.setText("");
-                } catch (Exception exception) {
-                    ;
+        while (!sorted) {
+            sorted = true;
+
+            for (int i = 0; i < students.size()-1; i++) {
+                for (int j = i+1; j < students.size(); j++) {
+                    passes++;
+
+                    Student s1 = students.get(i);
+                    Student s2 = students.get(j);
+
+                    if (s1.getLastName().compareTo(s2.getLastName()) > 0) {
+                        students.set(i, s2);
+                        students.set(j, s1);
+                        sorted = false;
+                    }
                 }
             }
         }
 
-        if (e.getSource() == doneJButton) {
-            showNextSection();
-            currentSection++;
+        statusBar.setText("Passes: " + passes);
+    }
+
+    public void mergeSort(int start, int end) {
+        passes = 0;
+        int middle = (start + end)/2;
+
+        if (middle == start) {
+            return;
+        }
+
+        mergeSort(start, middle);
+        mergeSort(middle, end);
+        merge(start, end);
+
+        statusBar.setText("Passes: " + passes);
+        updateNameList();
+    }
+
+    public void merge(int start, int end) {
+        passes++;
+        
+        ArrayList<Student> temp = new ArrayList<Student>();
+        for (int i = 0; i < end-start+1; i++) {
+            temp.add(new Student("", "", 0));
+        }
+
+        int middle = (start+end)/2;
+
+        int k = 0;
+        int i = start;
+        int j = middle;
+
+        while (i < middle && j < end) {
+            if (students.get(i).getLastName().compareTo(students.get(j).getLastName()) < 0) {
+                temp.set(k, students.get(i));
+                i++;
+            } else {
+                temp.set(k, students.get(j));
+                j++;
+            }
+            k++;
+        }
+
+        while (i < middle) {
+            temp.set(k, students.get(i));
+            i++;
+            k++;
+        }
+        
+        while (j < end){
+            temp.set(k, students.get(j));
+            j++;
+            k++;
+        }
+      
+        for (i = 0; i < end-start; i++) {
+            students.set(start+i, temp.get(i));
+        }
+    }
+
+    public void scramble() {
+        for (int i = 0; i < students.size(); i++) {
+            int rand = (int)(Math.random() * students.size());
+
+            Student s1 = students.get(i);
+            Student s2 = students.get(rand);
+
+            students.set(i, s2);
+            students.set(rand, s1);
         }
     }
 

@@ -16,7 +16,7 @@ public class Item implements Comparable {
     }
 
     public String toString() {
-        return "Item: " + name + " | Price: " + price;
+        return "Item: " + name + " | Price: $" + price;
     }
 
     @Override

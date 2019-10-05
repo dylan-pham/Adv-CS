@@ -1,0 +1,1 @@
+Challenge: Be able to add and remove an item to the HashSet and TreeSet of Item.  The scroll pane will be updated accordingly.

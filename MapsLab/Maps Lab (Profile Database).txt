@@ -1,0 +1,64 @@
+﻿Maps Lab (Profile Database)
+Advanced Computer Science
+
+
+Objectives: Object orientation. Java Components. Data Structures. Maps. Iterators
+
+
+Profile
+* The Profile Class will contain the first name, last name, and year of birth and be compatible with HashMap and TreeMap.  
+* The uniqueness of the Profile will be dependent on their name initials and year of birth.  
+* For use with TreeMap, the Profile class object will be sorted by last name, first name, and then birthyear and from a to z.
+* The data is given by this file  Link.  Generate a random school.  You can randomly pick from 1 to 10 schools of your choice.  Generate a random birth year.
+
+
+
+
+School Data
+* The profile data information will be profiled in a HashMap<Profile, String> and TreeMap<Profile, String> data structure.  The key  will be of the Profile Class, and value will be the school name.
+* The profile data will be displayed on the left-hand side.  You will display a list of Profiles in the profile with the Profile last name, first name, and birth year.  Do not display the school name.  You will use a TreeMap and they will be sorted when displayed.
+* You can look up what school that person goes to.  It will be displayed by entering their last name,  first name, and birth year.  It should take O(1) time.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+________________
+
+
+Admin View Tab
+There will be an admin tab where you do the following...
+* Change the school name of a Profile given the name, birth year, and the new school name of the Profile.
+* Allow you to add a new Profile
+   * When you add a Profile, the user will enter in the last name, first name, birth year, school name.  When you add a Profile with the same name and birth year, it will replace the existing.  
+* Remove a profile
+   * The last name, first name and birth year are needed for deletion.
+The HashMap and TreeMap will be affected by any change.
+
+
+Challenge: 
+1. When looking up a student, it will also display the class schedule for that student going to that school with at least 3 classes. You don't need to have periods, just the class names are fine.  You will need to generate a random class schedule for each student.  You can add and remove classes from their schedule.  You can do this however you like.   One way is to modify the map <key,value> from <Profile,String> to <Profile,SchoolInfo> and SchoolInfo will be a class containing the school and student schedule.
+
+
+
+
+Grading Rubric: 100 points
+10 Points will be deducted for each major error, and 5 Points for each minor error.
+Lab as Described.
+	80
+	Challenge
+	10
+	Milestone 1 - Be able to display all Profiles on the screen with the Profile last name, first name, and birth year number sorted.  Due Friday.
+	10
+	
+
+Due: 10/18 by 10am  in class via Google Classroom.  Link

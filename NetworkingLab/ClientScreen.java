@@ -27,61 +27,71 @@ import java.net.*;
 import java.awt.*;  
 import java.util.*;
  
-public class ClientScreen extends JPanel implements ActionListener, MouseListener {
- 
+public class ClientScreen extends JPanel implements MouseListener, ActionListener {
     Game game;
     private int playerXWins;
     private int playerOWins;
-    private JButton twoPlayerButton;
-    private JButton onePlayerButton;
     private JLabel playerXWinsLabel;
     private JLabel playerOWinsLabel;
-    private boolean endGame;
-    private int mode;
     private JTextArea winnerTextArea;
-     
+    private JTextArea player2TextArea;
+    private JButton resetButton;
+    
+    Socket serverSocket;
+    Socket clientSocket;
+    ObjectOutputStream outObj;
+    ObjectInputStream inObj;
+
     public ClientScreen() {
         this.setLayout(null);
          
         setLayout(null);
+
+        try {
+            String hostName = "localhost";
+            int portNumber = 1024;
+            serverSocket = new Socket(hostName, portNumber);
+            inObj = new ObjectInputStream(serverSocket.getInputStream());
+            outObj = new ObjectOutputStream(serverSocket.getOutputStream());
+        } catch (IOException e) {
+            System.err.println("Couldn't get I/O for the connection");
+            System.exit(1);
+        }
 
         game = new Game();
 
         playerXWins = 0;
         playerOWins = 0;
 
-        twoPlayerButton = new JButton("2 Player");
-        twoPlayerButton.setBounds(740, 100, 100, 30);
-        twoPlayerButton.addActionListener(this);
-        this.add(twoPlayerButton);
-
-        onePlayerButton = new JButton("1 Player");
-        onePlayerButton.setBounds(860, 100, 100, 30);
-        onePlayerButton.addActionListener(this);
-        this.add(onePlayerButton);
-
-        playerXWinsLabel = new JLabel("Player X Wins: " + playerXWins);
+        playerXWinsLabel = new JLabel("Player 1 Wins: " + playerXWins);
         playerXWinsLabel.setBounds(800, 150, 110, 30);
         this.add(playerXWinsLabel);
 
-        playerOWinsLabel = new JLabel("Player O Wins: " + playerOWins);
+        playerOWinsLabel = new JLabel("Player 2 Wins: " + playerOWins);
         playerOWinsLabel.setBounds(800, 200, 110, 30);
         this.add(playerOWinsLabel);
-
-        endGame = true;
 
         winnerTextArea = new JTextArea("Select Mode");
         winnerTextArea.setBounds(300, 750, 200, 30);
         this.add(winnerTextArea);
 
+        player2TextArea = new JTextArea("Player 2");
+        player2TextArea.setBounds(300, 710, 200, 30);
+        this.add(player2TextArea);
+
         addMouseListener(this);
         this.setFocusable(true);
+
+        resetButton = new JButton("Reset");
+        resetButton.setBounds(800, 300, 100, 30);
+        this.add(resetButton);
+        resetButton.addActionListener(this);
+        resetButton.setVisible(false);
+
+        initializeGame();
     }
 
-    private void initializeGame() {
-        endGame = false;
-        twoPlayerButton.setVisible(false);
-        onePlayerButton.setVisible(false);
+    public void initializeGame() {
         winnerTextArea.setVisible(false);
         game.reset();
         repaint();
@@ -89,14 +99,7 @@ public class ClientScreen extends JPanel implements ActionListener, MouseListene
  
  
     public Dimension getPreferredSize() {
-        return new Dimension(1000, 600);
-    }
-
-    private void endGame() {
-        endGame = true;
-        twoPlayerButton.setVisible(true);        
-        onePlayerButton.setVisible(true);
-        winnerTextArea.setVisible(true);
+        return new Dimension(1000, 800);
     }
 
     private void checkEndGameConditions(int winner) {
@@ -119,157 +122,98 @@ public class ClientScreen extends JPanel implements ActionListener, MouseListene
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (game.getTurn() == 1 && !endGame) {
+        if (game.getTurn() == 1) {
             playerOWinsLabel.setForeground(Color.BLACK);
             playerXWinsLabel.setForeground(Color.RED);
-        } else if (game.getTurn() == 2 && !endGame) {
+        } else if (game.getTurn() == 2) {
             playerXWinsLabel.setForeground(Color.BLACK);
             playerOWinsLabel.setForeground(Color.RED);
         }
         
-        game.drawMe(g);
-        
-        if ((game.checkTicTacToe() != 0 || game.checkFull() == true) && !endGame) {
-            checkEndGameConditions(game.checkTicTacToe());
-            endGame();
+        int[][] board = game.getBoard();
+
+        // drawing board
+        g.fillRect(100, 100, 600, 5);
+        g.fillRect(100, 100, 5, 600);
+        g.fillRect(100, 700, 600, 5);
+        g.fillRect(700, 100, 5, 600);
+        g.fillRect(300, 100, 5, 600);
+        g.fillRect(500, 100, 5, 600);
+        g.fillRect(100, 300, 600, 5);
+        g.fillRect(100, 500, 600, 5);
+
+        int x = 200;
+        int y = 200;
+        for (int r = 0; r < board.length; r++) {
+            for (int c = 0; c < board[r].length; c++) {
+                if (board[r][c] == 1) {
+                    g.drawString("X", x, y);
+                } else if (board[r][c] == 2) {
+                    g.drawString("O", x, y);
+                }
+                x += 200;
+            }
+            x = 200;
+            y += 200;
         }
-    } 
+        
+        if (!game.getEndGame()) {
+            checkEndGameConditions(game.checkTicTacToe());
+            resetButton.setVisible(false);
 
-    public void blockPlayer() {
-        if (game.getSpot(0, 0) == 1 && game.getSpot(0, 1) == 1 && game.getSpot(0, 2) == 0) {
-            game.insertXO(0, 2);
-        } else if (game.getSpot(0, 1) == 1 && game.getSpot(0, 2) == 1 && game.getSpot(0, 0) == 0) {
-            game.insertXO(0, 0);
-        } else if (game.getSpot(1, 0) == 1 && game.getSpot(1, 1) == 1 && game.getSpot(1, 2) == 0) {
-            game.insertXO(1, 2);
-        } else if (game.getSpot(1, 1) == 1 && game.getSpot(1, 2) == 1 && game.getSpot(1, 0) == 0) {
-            game.insertXO(1, 0);
-        } else if (game.getSpot(2, 0) == 1 && game.getSpot(2, 1) == 1 && game.getSpot(2, 2) == 0) {
-            game.insertXO(2, 2);
-        } else if (game.getSpot(2, 1) == 1 && game.getSpot(2, 2) == 1 && game.getSpot(2, 0) == 0) {
-            game.insertXO(2, 0);
-        } else if (game.getSpot(0, 0) == 1 && game.getSpot(1, 0) == 1 && game.getSpot(2, 0) == 0) {
-            game.insertXO(2, 0);
-        } else if (game.getSpot(1, 0) == 1 && game.getSpot(2, 0) == 1 && game.getSpot(0, 0) == 0) {
-            game.insertXO(0, 0);
-        } else if (game.getSpot(0, 1) == 1 && game.getSpot(1, 1) == 1 && game.getSpot(2, 1) == 0) {
-            game.insertXO(2, 1);
-        } else if (game.getSpot(2, 1) == 1 && game.getSpot(1, 1) == 1 && game.getSpot(0, 1) == 0) {
-            game.insertXO(0, 1);
-        } else if (game.getSpot(0, 2) == 1 && game.getSpot(1, 2) == 1 && game.getSpot(2, 2) == 0) {
-            game.insertXO(2, 2);
-        } else if (game.getSpot(2, 2) == 1 && game.getSpot(1, 2) == 1 && game.getSpot(0, 2) == 0) {
-            game.insertXO(0, 2);
-        } else if (game.getSpot(0, 0) == 1 && game.getSpot(1, 1) == 1 && game.getSpot(2, 2) == 0) {
-            game.insertXO(2, 2);
-        } else if (game.getSpot(1, 1) == 1 && game.getSpot(2, 2) == 1 && game.getSpot(0, 0) == 0) {
-            game.insertXO(0, 0);
-        } else if (game.getSpot(0, 2) == 1 && game.getSpot(1, 1) == 1 && game.getSpot(2, 0) == 0) {
-            game.insertXO(2, 0);
-        } else if (game.getSpot(2, 0) == 1 && game.getSpot(1, 1) == 1 && game.getSpot(0, 2) == 0) {
-            game.insertXO(0, 2);
         } else {
-            if ((game.checkTicTacToe() != 0 || game.checkFull() == true) && !endGame) {
-                checkEndGameConditions(game.checkTicTacToe());
-                endGame();
-            }
-
-            int row = (int)(Math.random() * 3);
-            int column = (int)(Math.random() * 3);
-
-            while (game.getSpot(row, column) != 0 && !endGame) {
-                row = (int)(Math.random() * 3);
-                column = (int)(Math.random() * 3);
-                System.out.println("stuck");
-            }
-
-            game.insertXO(row, column);
+            resetButton.setVisible(true);
         }
     }
 
     public void mousePressed(MouseEvent e) {
         // x's and o's can only be placed during game
-        if (!endGame) {
-            if (mode == 2) {
-                if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 100 && e.getY() <= 300) {
-                    game.insertXO(0, 0);
-                }
+        if (game.getTurn() == 2) {
+            if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 100 && e.getY() <= 300) {
+                game.insertXO(0, 0);
+            }
 
-                if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 100 && e.getY() <= 300) {
-                    game.insertXO(0, 1);
-                }
+            else if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 100 && e.getY() <= 300) {
+                game.insertXO(0, 1);
+            }
 
-                if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 100 && e.getY() <= 300) {
-                    game.insertXO(0, 2);
-                }
+            else if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 100 && e.getY() <= 300) {
+                game.insertXO(0, 2);
+            }
 
-                if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 301 && e.getY() <= 500) {
-                    game.insertXO(1, 0);
-                }
+            else if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 301 && e.getY() <= 500) {
+                game.insertXO(1, 0);
+            }
 
-                if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 301 && e.getY() <= 500) {
-                    game.insertXO(1, 1);
-                }
+            else if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 301 && e.getY() <= 500) {
+                game.insertXO(1, 1);
+            }
 
-                if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 301 && e.getY() <= 500) {
-                    game.insertXO(1, 2);
-                }
+            else if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 301 && e.getY() <= 500) {
+                game.insertXO(1, 2);
+            }
 
-                if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 501 && e.getY() <= 700) {
-                    game.insertXO(2, 0);
-                }
+            else if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 501 && e.getY() <= 700) {
+                game.insertXO(2, 0);
+            }
 
-                if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 501 && e.getY() <= 700) {
-                    game.insertXO(2, 1);
-                }
+            else if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 501 && e.getY() <= 700) {
+                game.insertXO(2, 1);
+            }
 
-                if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 501 && e.getY() <= 700) {
-                    game.insertXO(2, 2);
-                }
-
+            else if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 501 && e.getY() <= 700) {
+                game.insertXO(2, 2);
+            }
+            try {
+                outObj.reset();
+                outObj.writeObject(game);
                 playPlacingMarkerSound();
-            } else {
-                if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 100 && e.getY() <= 300) {
-                    game.insertXO(0, 0);
-                }
-
-                if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 100 && e.getY() <= 300) {
-                    game.insertXO(0, 1);
-                }
-
-                if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 100 && e.getY() <= 300) {
-                    game.insertXO(0, 2);
-                }
-
-                if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 301 && e.getY() <= 500) {
-                    game.insertXO(1, 0);
-                }
-
-                if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 301 && e.getY() <= 500) {
-                    game.insertXO(1, 1);
-                }
-
-                if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 301 && e.getY() <= 500) {
-                    game.insertXO(1, 2);
-                }
-
-                if (e.getX() >= 100 && e.getX() <= 300 && e.getY() >= 501 && e.getY() <= 700) {
-                    game.insertXO(2, 0);
-                }
-
-                if (e.getX() >= 301 && e.getX() <= 500 && e.getY() >= 501 && e.getY() <= 700) {
-                    game.insertXO(2, 1);
-                }
-
-                if (e.getX() >= 501 && e.getX() <= 700 && e.getY() >= 501 && e.getY() <= 700) {
-                    game.insertXO(2, 2);
-                }
-
-                playPlacingMarkerSound();
-                blockPlayer();
+            } catch (IOException ef) {
+                // System.err.println("Couldn't get I/O for the connection to " + hostName);
+                System.exit(1);
             }
         }
- 
+
         repaint();
     }
  
@@ -282,14 +226,17 @@ public class ClientScreen extends JPanel implements ActionListener, MouseListene
     public void mouseClicked(MouseEvent e) {}
 
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == twoPlayerButton) {
-            mode = 2;
+        if (e.getSource() == resetButton) {
             initializeGame();
-        }
+            repaint();
 
-        if (e.getSource() == onePlayerButton) {
-            mode = 1;
-            initializeGame();
+            try {
+                outObj.reset();
+                outObj.writeObject(game);
+            } catch (IOException ef) {
+                System.err.println("Couldn't get I/O for the connection");
+                System.exit(1);
+            }
         }
     }
 
@@ -327,31 +274,17 @@ public class ClientScreen extends JPanel implements ActionListener, MouseListene
     }
  
     public void poll() throws IOException{
-        String hostName = "localhost";
-        int portNumber = 1024;
-         
-        try {
-            Socket serverSocket = new Socket(hostName, portNumber);
-             
-            ObjectInputStream inObj = new ObjectInputStream(serverSocket.getInputStream());
-            ObjectOutputStream outObj = new ObjectOutputStream(serverSocket.getOutputStream());
-             
-            String serverMessage = (String) inObj.readObject(); 
-            System.out.println(serverMessage);
-            
+        try {   
             while (true) {
                 Game game2 = (Game)inObj.readObject(); 
-                game = game2;  
+                game = game2;
                 repaint();
-                
-                outObj.reset();
-                outObj.writeObject(game);
             }
         } catch (ClassNotFoundException e) {
             System.err.println("Class does not exist" + e);
             System.exit(1);
         } catch (IOException e) {
-            System.err.println("Couldn't get I/O for the connection to " + hostName);
+            // System.err.println("Couldn't get I/O for the connection to " + hostName);
             System.exit(1);
         }
     }

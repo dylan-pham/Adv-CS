@@ -1,1 +1,1 @@
-implemented 1 player mode against computer
+did not complete a challenge

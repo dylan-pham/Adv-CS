@@ -30,12 +30,11 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.util.HashMap;
 import java.util.ArrayList;
- 
 import java.io.*;
 import java.net.*;
 import java.awt.*;  
 import java.util.*;
- 
+
 public class ServerScreen extends JPanel implements MouseListener, ActionListener, KeyListener {
     Game game;
 
@@ -45,16 +44,18 @@ public class ServerScreen extends JPanel implements MouseListener, ActionListene
     Socket clientSocket;
 
     private Image pacman;
+    private Image harold;
     private int playerX;
     private int playerY;
     private HashMap<String, Image> itemImages;
     
     public ServerScreen() {
-        this.setLayout(null);
         setLayout(null);
         addMouseListener(this);
         this.setFocusable(true);
         addKeyListener(this);
+
+        game = new Game();
         
         try {
             int portNumber = 1024;
@@ -73,11 +74,22 @@ public class ServerScreen extends JPanel implements MouseListener, ActionListene
             System.out.println(e);
         }
 
+        try {
+            harold = ImageIO.read(new File("img/harold.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+
         playerX = 0;
         playerY = 0;
 
         itemImages = new HashMap<String, Image>();
-
+        try {
+            Image avocado = ImageIO.read(new File("img/avocado.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("avocado", avocado);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
         try {
             Image ball = ImageIO.read(new File("img/ball.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
             itemImages.put("ball", ball);
@@ -86,21 +98,91 @@ public class ServerScreen extends JPanel implements MouseListener, ActionListene
         }
 
         try {
+            Image banana = ImageIO.read(new File("img/banana.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("banana", banana);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
+            Image book = ImageIO.read(new File("img/book.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("book", book);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
+            Image coin = ImageIO.read(new File("img/coin.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("coin", coin);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
+            Image fries = ImageIO.read(new File("img/fries.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("fries", fries);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
+            Image guitar = ImageIO.read(new File("img/guitar.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("guitar", guitar);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
             Image hat = ImageIO.read(new File("img/hat.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
             itemImages.put("hat", hat);
         } catch ( IOException e ){
             System.out.println(e);
         }
+        try {
+            Image pokemon = ImageIO.read(new File("img/pokemon.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("pokemon", pokemon);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
+            Image socks = ImageIO.read(new File("img/socks.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("socks", socks);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
+            Image yeezys = ImageIO.read(new File("img/yeezys.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("yeezys", yeezys);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        // try {
+        //     Image fire = ImageIO.read(new File("img/fire.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+        //     itemImages.put("fire0", fire);
+        //     itemImages.put("fire1", fire);
+        //     itemImages.put("fire2", fire);
+        //     itemImages.put("fire3", fire);
+        //     itemImages.put("fire4", fire);
+        //     itemImages.put("fire5", fire);
+        //     itemImages.put("fire6", fire);
+        //     itemImages.put("fire7", fire);
+        //     itemImages.put("fire8", fire);
+        //     itemImages.put("fire9", fire);
+        // } catch ( IOException e ){
+        //     System.out.println(e);
+        // }
 
-        game = new Game();
+        try {
+            outObj.reset();
+            outObj.writeObject(game);
+        } catch (IOException ef) {
+            System.err.println("Couldn't get I/O for the connection");
+            System.exit(1);
+        }
     }
 
     public Dimension getPreferredSize() {
-        return new Dimension(900, 800);
+        return new Dimension(1000, 800);
     }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+        game.checkEndGame();
         
         // drawing grid
         int x = 0;
@@ -113,29 +195,48 @@ public class ServerScreen extends JPanel implements MouseListener, ActionListene
         }
 
         // drawing game items
-        HashMap<Coordinate, String> gameItems = game.getGameItems();
+        HashMap<Coordinate, String> gameItems = game.getPlacedGameItems();
         for (Coordinate each : gameItems.keySet()) {
             String itemName = gameItems.get(each);
             g.drawImage(itemImages.get(itemName), each.getX() * 100, each.getY() * 100, null);
             
             // checking collision
             if (playerX == each.getX() * 100 && playerY == each.getY() * 100 && itemName != null) {
-                game.destroyItem(each, itemName);
-                repaint();
+                game.destroyItem(each);
+                game.addToCollectedItems2(itemName);
             }
         }
 
+        try {
+            outObj.reset();
+            outObj.writeObject(game);
+        } catch (IOException ef) {
+            System.err.println("Couldn't get I/O for the connection");
+            System.exit(1);
+        }
+        
+        repaint();
+
         // drawing collected items
-        ArrayList<String> collectedItems = game.getCollectedItems();
+        ArrayList<String> collectedItems = game.getCollectedItems1();
         int y2 = 0;
+        int x2 = 800;
         for (String each : collectedItems) {
-            g.drawImage(itemImages.get(each), 800, y2, null);
+            g.drawImage(itemImages.get(each), x2, y2, null);
             y2 += 100;
             repaint();
+
+            if (y2 == 700) {
+                y2 = 0;
+                x2 = 900;
+            }
         }
 
+        // drawing player
         g.drawImage(pacman, playerX, playerY, null);
+        g.drawImage(harold, game.getPlayer2Coordinate().getX(), game.getPlayer2Coordinate().getY(), null);
     } 
+
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == 39 && playerX != 700) {
             playerX += 100;
@@ -147,21 +248,25 @@ public class ServerScreen extends JPanel implements MouseListener, ActionListene
             playerY -= 100;
         }
 
+        game.setPlayer1Coordinate(new Coordinate(playerX, playerY));
+
+        try {
+            outObj.reset();
+            outObj.writeObject(game);
+        } catch (IOException ef) {
+            System.err.println("Couldn't get I/O for the connection");
+            System.exit(1);
+        }
+
         repaint();
     }
-    public void keyReleased(KeyEvent e) {}
-    public void keyTyped(KeyEvent e) {}
-
+    
     public void mousePressed(MouseEvent e) {
         
     }
-    public void mouseReleased(MouseEvent e) {}
-    public void mouseEntered(MouseEvent e) {}
-    public void mouseExited(MouseEvent e) {}
-    public void mouseClicked(MouseEvent e) {}
-    public void actionPerformed(ActionEvent e) {
-    }
- 
+
+    public void actionPerformed(ActionEvent e) {}
+    
     public void poll() throws IOException {
         try {
             while (true) {
@@ -169,7 +274,6 @@ public class ServerScreen extends JPanel implements MouseListener, ActionListene
                 game = game2;  
                 repaint();
             }
-
         } catch (ClassNotFoundException e) {
             System.err.println("Class does not exist" + e);
             System.exit(1);
@@ -178,4 +282,12 @@ public class ServerScreen extends JPanel implements MouseListener, ActionListene
             System.exit(1);
         }
     }
+
+    // required methods
+    public void keyReleased(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {}
+    public void mouseReleased(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
+    public void mouseClicked(MouseEvent e) {}
 }

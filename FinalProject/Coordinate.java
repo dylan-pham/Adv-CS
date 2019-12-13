@@ -1,4 +1,6 @@
-public class Coordinate {
+import java.io.Serializable;
+
+public class Coordinate implements Serializable {
     private int x;
     private int y;
 
@@ -21,5 +23,9 @@ public class Coordinate {
 
     public void setY(int y) {
         this.y = y;
+    }
+    
+    public boolean equals(Coordinate c) {
+        return x == c.getX() && y == c.getY();
     }
 }

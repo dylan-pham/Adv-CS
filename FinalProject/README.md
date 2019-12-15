@@ -1,0 +1,3 @@
+- actions may not register due to lag (key pressed method is too slow)
+- sound to pick up item was removed to reduce lag
+- challenge: "Have the player be able to place a bomb on an empty square on the grid by using the spacebar key.  The bomb will act as an obstacle.  Each player is limited to 5 bombs."

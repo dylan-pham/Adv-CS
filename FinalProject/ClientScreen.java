@@ -30,6 +30,10 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Stack;
+import java.net.URL;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import java.io.*;
 import java.net.*;
 import java.awt.*;  
@@ -45,9 +49,14 @@ public class ClientScreen extends JPanel implements MouseListener, ActionListene
 
     private Image harold;
     private Image pacman;
+    private Image life;
+    private Image player1wins;
+    private Image player2wins;
     private int playerX;
     private int playerY;
     private HashMap<String, Image> itemImages;
+    private Stack<Integer> lives;
+    private int bombsPlaced;
 
     public ClientScreen() {
         setLayout(null);
@@ -76,6 +85,24 @@ public class ClientScreen extends JPanel implements MouseListener, ActionListene
 
         try {
             pacman = ImageIO.read(new File("img/pacman.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+
+        try {
+            life = ImageIO.read(new File("img/life.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+
+        try {
+            player1wins = ImageIO.read(new File("img/player1wins.png")).getScaledInstance(1100, 800, Image.SCALE_DEFAULT);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+
+        try {
+            player2wins = ImageIO.read(new File("img/player2wins.png")).getScaledInstance(1100, 800, Image.SCALE_DEFAULT);
         } catch ( IOException e ){
             System.out.println(e);
         }
@@ -151,76 +178,129 @@ public class ClientScreen extends JPanel implements MouseListener, ActionListene
         } catch ( IOException e ){
             System.out.println(e);
         }
-        // try {
-        //     Image fire = ImageIO.read(new File("img/fire.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
-        //     itemImages.put("fire0", fire);
-        //     itemImages.put("fire1", fire);
-        //     itemImages.put("fire2", fire);
-        //     itemImages.put("fire3", fire);
-        //     itemImages.put("fire4", fire);
-        //     itemImages.put("fire5", fire);
-        //     itemImages.put("fire6", fire);
-        //     itemImages.put("fire7", fire);
-        //     itemImages.put("fire8", fire);
-        //     itemImages.put("fire9", fire);
-        // } catch ( IOException e ){
-        //     System.out.println(e);
-        // }
+        try {
+            Image bomb = ImageIO.read(new File("img/bomb.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("bomb", bomb);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+        try {
+            Image fire = ImageIO.read(new File("img/fire.png")).getScaledInstance(100, 100, Image.SCALE_DEFAULT);
+            itemImages.put("fire0", fire);
+            itemImages.put("fire1", fire);
+            itemImages.put("fire2", fire);
+            itemImages.put("fire3", fire);
+            itemImages.put("fire4", fire);
+            itemImages.put("fire5", fire);
+            itemImages.put("fire6", fire);
+            itemImages.put("fire7", fire);
+            itemImages.put("fire8", fire);
+            itemImages.put("fire9", fire);
+        } catch ( IOException e ){
+            System.out.println(e);
+        }
+
+        lives = new Stack<Integer>();
+        lives.push(0);
+        lives.push(0);
+        lives.push(0);
+
+        bombsPlaced = 0;
     }
 
     public Dimension getPreferredSize() {
-        return new Dimension(1000, 800);
+        return new Dimension(1100, 800);
     }
 
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        game.checkEndGame();
-
-        // drawing grid
-        int x = 0;
-        int y = 0;
-        for (int i = 0; i < 9; i++) {
-            g.fillRect(x, 0, 1, 800);
-            g.fillRect(0, y, 800, 1);
-            x += 100;
-            y += 100;
-        }
-
-        // drawing game items
-        HashMap<Coordinate, String> gameItems = game.getPlacedGameItems();
-        for (Coordinate each : gameItems.keySet()) {
-            String itemName = gameItems.get(each);
-            g.drawImage(itemImages.get(itemName), each.getX() * 100, each.getY() * 100, null);
+        
+        if (game.checkWinner().equals("player1")) {
+            g.drawImage(player1wins, 0, 0, null);
+        } else if (game.checkWinner().equals("player2")) {
+            g.drawImage(player2wins, 0, 0, null);
+        } else {
+            // drawing grid
+            int x = 0;
+            int y = 0;
+            for (int i = 0; i < 9; i++) {
+                g.fillRect(x, 0, 1, 800);
+                g.fillRect(0, y, 800, 1);
+                x += 100;
+                y += 100;
+            }
+    
+            // drawing lives
+            for (int i = 0; i < lives.size(); i++) {
+                g.drawImage(life, 1000, i * 100, null);
+            }
+    
+            // drawing game items
+            HashMap<String, String> gameItems = game.getPlacedGameItems();
+            for (String each : gameItems.keySet()) {
+                String itemName = gameItems.get(each);
+                g.drawImage(itemImages.get(itemName), Integer.parseInt(each.split(" ")[0]) * 100, Integer.parseInt(each.split(" ")[1]) * 100, null);
+            }
+    
+            try {
+                outObj.reset();
+                outObj.writeObject(game);
+            } catch (IOException ef) {
+                System.err.println("Couldn't get I/O for the connection");
+                System.exit(1);
+            }
             
-            // checking collision
-            if (playerX == each.getX() * 100 && playerY == each.getY() * 100 && itemName != null) {
-                game.destroyItem(each);
+            repaint();
+    
+            // drawing collected items
+            ArrayList<String> collectedItems = game.getCollectedItems2();
+            int y2 = 0;
+            int x2 = 800;
+            for (String each : collectedItems) {
+                g.drawImage(itemImages.get(each), x2, y2, null);
+                y2 += 100;
+                repaint();
+    
+                if (y2 == 800) {
+                    y2 = 0;
+                    x2 = 900;
+                }
+            }
+    
+            // drawing player
+            g.drawImage(harold, playerX, playerY, null);
+            g.drawImage(pacman, Integer.parseInt(game.getPlayer1Coordinate().split(" ")[0]), Integer.parseInt(game.getPlayer1Coordinate().split(" ")[1]), null);
+        }
+    }
+
+    public void checkCollision() {
+        HashMap<String, String> gameItems = game.getPlacedGameItems();
+        String coordinate = playerX/100 + " " + playerY/100;
+        if (gameItems.containsKey(coordinate)) {
+            String itemName = gameItems.get(coordinate);
+
+            if (itemName != null && !itemName.contains("fire") && !itemName.equals("bomb")) {
+                game.destroyItem(coordinate);
                 game.addToCollectedItems2(itemName);
+
+                // playGetItemSound();
+
+                if (game.getCollectedItems2().size() > 5) {
+                    game.setWinner("player2");
+                }
+            } else if (itemName != null) {
+                playerX = 0;
+                playerY = 0;
+
+                if (lives.size() > 1) {
+                    lives.pop();
+                    playLoseLifeSound();
+                } else {
+                    game.setWinner("player1");
+                }
+
             }
         }
-
-        try {
-            outObj.reset();
-            outObj.writeObject(game);
-        } catch (IOException ef) {
-            System.err.println("Couldn't get I/O for the connection");
-            System.exit(1);
-        }
-        
-        repaint();
-
-        // drawing collected items
-        ArrayList<String> collectedItems = game.getCollectedItems2();
-        int y2 = 0;
-        for (String each : collectedItems) {
-            g.drawImage(itemImages.get(each), 800, y2, null);
-            y2 += 100;
-            repaint();
-        }
-
-        // drawing player
-        g.drawImage(harold, playerX, playerY, null);
-        g.drawImage(pacman, game.getPlayer1Coordinate().getX(), game.getPlayer1Coordinate().getY(), null);
     }
 
     public void keyPressed(KeyEvent e) {
@@ -232,9 +312,15 @@ public class ClientScreen extends JPanel implements MouseListener, ActionListene
             playerY += 100;
         } else if (e.getKeyCode() == 38  && playerY != 0) {
             playerY -= 100;
+        } else if (e.getKeyCode() == 32) {
+            if (bombsPlaced < 6) {
+                game.placeObstacle();
+                bombsPlaced++;
+            }
         }
 
-        game.setPlayer2Coordinate(new Coordinate(playerX, playerY));
+        checkCollision();
+        game.setPlayer2Coordinate(playerX + " " + playerY);
 
         try {
             outObj.reset();
@@ -243,8 +329,28 @@ public class ClientScreen extends JPanel implements MouseListener, ActionListene
             System.err.println("Couldn't get I/O for the connection");
             System.exit(1);
         }
+    }
 
-        repaint();
+    public void playGetItemSound() {
+        try {
+            URL url = this.getClass().getClassLoader().getResource("audio/getitem.wav");
+            Clip clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(url));
+            clip.start();
+        } catch (Exception exc) {
+            exc.printStackTrace(System.out);
+        }
+    }
+
+    public void playLoseLifeSound() {
+        try {
+            URL url = this.getClass().getClassLoader().getResource("audio/loselife.wav");
+            Clip clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(url));
+            clip.start();
+        } catch (Exception exc) {
+            exc.printStackTrace(System.out);
+        }
     }
     
     public void mousePressed(MouseEvent e) {

@@ -1,4 +1,4 @@
-public class DLList<E extends Comparable<E>> {
+public class DLList<E> {
     private Node<E> head;
     private Node<E> tail;
     private int size;
@@ -9,120 +9,76 @@ public class DLList<E extends Comparable<E>> {
         size = 0;
     }
 
-    private Node<E> getNode(int index) {
-        if (index >= size()/2) {
-            Node<E> current = tail.prev();
-            int count = size() - 1;
-
-            while (true) {
-                if (count != index) {
-                    return current;
-                } else if (count < 0) {
-                    break;
-                }
-
-                count--;
-                current = current.prev();
-            }
-        } else {
-            Node<E> current = head.next();
-            int count = 0;
-
-            while (true) {
-                if (count != index) {
-                    return current;
-                } else if (count > size) {
-                    break;
-                }
-
-                count++;
-                current = current.next();
-            }
-        }
-
-        return null;
-    }
-
     public void add(E data) {
         Node<E> newNode = new Node<E>(data);
 
-        tail.prev().setNext(newNode);
-        newNode.setNext(tail);
+        if (size == 0) {
+            head.setNext(newNode);
+            tail.setPrev(newNode);
+            newNode.setPrev(head);
+            newNode.setNext(tail);
+        } else {
+            tail.prev().setNext(newNode);
+            newNode.setPrev(tail.prev());
+            tail.setPrev(newNode);
+            newNode.setNext(tail);
+        }
 
         size++;
     }
 
-    public void add(int index, E data) {
-        Node<E> newNode = new Node<E>(data);
-        Node<E> currentNode = getNode(index);
-        newNode.setNext(currentNode);
-        newNode.setPrev(currentNode.prev());
-        currentNode.setPrev(newNode);
-    }
-
-    public E get(int index) {
-        if (index >= size()/2) {
-            Node<E> current = tail.prev();
-            int count = size() - 1;
-
-            while (true) {
-                if (count != index) {
-                    return current.get();
-                } else if (count < 0) {
-                    break;
-                }
-
-                count--;
-                current = current.prev();
-            }
+    public void remove(int index) {
+        if (index == 0) {
+            head.setNext(head.next().next());
+            size--;
         } else {
             Node<E> current = head.next();
-            int count = 0;
-
-            while (true) {
-                if (count != index) {
-                    return current.get();
-                } else if (count > size) {
+            for (int i = 0; i < size; i++) {
+                if (i == index) {
+                    current.prev().setNext(current.next());
+                    current.next().setPrev(current.prev());
+                    size--;
                     break;
                 }
-
-                count++;
+    
                 current = current.next();
             }
         }
-
-        return null;
     }
 
-    public void remove(int index) {
-        remove(get(index));
-    }
+    public E get(int index) {
+        Node<E> current = head.next();
 
-    public void remove(E data) {
-        Node<E> current = head;
-
-        while (current.next() != null) {
-            if (current.get().equals(data)) {
-                current.prev().setNext(current.next());
-                size--;
-                break;
+        for (int i = 0; i < size; i++) {
+            if (i == index) {
+                return current.get();
             }
 
             current = current.next();
         }
 
+        return null;
     }
 
     public void set(int index, E data) {
-        getNode(index).setData(data);
+        Node<E> current = head.next();
+
+        for (int i = 0; i < size; i++) {
+            if (i == index) {
+                current.setData(data);
+                break;
+            }
+
+            current = current.next();
+        }
     }
 
     public String toString() {
         String s = "";
-        Node<E> current = head;
+        Node<E> current = head.next();
 
         while (current.next() != null) {
-            s += current.toString();
+            s += current.get().toString();
 
             current = current.next();
         }
@@ -131,15 +87,6 @@ public class DLList<E extends Comparable<E>> {
     }
 
     public int size() {
-        int count = 0;
-        Node<E> current = head;
-
-        while (current.next() != null) {
-            count++;
-
-            current = current.next();
-        }
-
-        return count;
+        return size;
     }
 }

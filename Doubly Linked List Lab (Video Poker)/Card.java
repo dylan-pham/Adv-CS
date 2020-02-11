@@ -7,7 +7,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.JTextArea;
  
-public class Card implements Comparable<Card> {
+public class Card {
     private int value;
     private String name;
     private String suit;
@@ -77,19 +77,51 @@ public class Card implements Comparable<Card> {
         return value;
     }
 
-    public boolean equals(Object o){
-        // Task t = (Task)o;
-        // if(this.toString().equals(t.toString())){
-        //   return true;
-        // }
-    
-        // return false;
+    public String getName() {
+        return name;
+    }
+
+    public String getSuit() {
+        return suit;
+    }
+
+    public boolean equals(Card c){
+        return name.equals(c.getName()) && suit.equals(c.getSuit());
+    }
+
+    public String toString() {
+        return name + " | " + suit;
+    }
+
+    public boolean isNextCard(Card c) {
+        if (name.equals("1") && c.getName().equals("2")) {
+            return true;
+        } else if (name.equals("2") && c.getName().equals("3")) {
+            return true;
+        } else if (name.equals("3") && c.getName().equals("4")) {
+            return true;
+        } else if (name.equals("4") && c.getName().equals("5")) {
+            return true;
+        } else if (name.equals("5") && c.getName().equals("6")) {
+            return true;
+        } else if (name.equals("6") && c.getName().equals("7")) {
+            return true;
+        } else if (name.equals("7") && c.getName().equals("8")) {
+            return true;
+        } else if (name.equals("8") && c.getName().equals("9")) {
+            return true;
+        } else if (name.equals("9") && c.getName().equals("10")) {
+            return true;
+        } else if (name.equals("10") && c.getName().equals("J")) {
+            return true;
+        } else if (name.equals("J") && c.getName().equals("Q")) {
+            return true;
+        } else if (name.equals("Q") && c.getName().equals("K")) {
+            return true;
+        } else if (name.equals("K") && c.getName().equals("A")) {
+            return true;
+        }
 
         return false;
-    }
-    
-    public int compareTo(Card o){
-        // return this.toString().compareTo(o.toString());
-        return 1;
     }
 }

@@ -29,14 +29,6 @@ public class GameManager implements Runnable{
 		serverThreads.remove(st);
 	}
 	
-	public int addNewPlayer(){
-		id++;
-			
-		gameData.addNewPlayer(new Player(id));
-		
-		return id;
-	}
-	
 	public void run(){
 		while(true) {
 			try {
@@ -46,22 +38,4 @@ public class GameManager implements Runnable{
 			}
 		}
 	}
-	
-	public void removePlayer(int id){
-		//remove player
-		gameData.removePlayer(id);
-		
-		//remove serverThreads that ended
-		for(int i=0; i<serverThreads.size(); i++){
-			if( serverThreads.get(i).getMyID() == id ){
-				serverThreads.remove(i);
-				i--;
-			}
-		}
-	}
-	
-	
-	
-	
-	
 }

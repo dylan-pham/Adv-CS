@@ -34,13 +34,9 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
     private Stack<Pair<Pair<Integer, Integer>, RGB>> previousStates; // keeping track of previous actions for undo
     private Stack<Pair<Pair<Integer, Integer>, RGB>> undoneStates; // keeping track of undone actions for redo
 	private ObjectOutputStream out;
-	private int myID;
-	private int playerIndex;
 	private GameData gameData;
 
     public Screen() {
-		myID = -1;
-		playerIndex = -1;
         setLayout(null);
 
         selector = new ColorPalette[8][1];
@@ -343,17 +339,11 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 		out = new ObjectOutputStream(serverSocket.getOutputStream());
 		ObjectInputStream in = new ObjectInputStream(serverSocket.getInputStream());
 
-		//repaint();
 		//listens for a stream
 		try {
 
 			//send String to server to test connection
-			out.writeObject("Hello from new player");
-
-			//receive id from server
-			myID = (Integer) in.readObject();
-			System.out.println("my id is " + myID );
-
+			out.writeObject("New client connected");
 
 			while (true) {
 				//wait for gameData object
@@ -363,16 +353,6 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 				grid = gameData.getGrid();
 
 				repaint();
-
-				//get for playerIndex of player
-				ArrayList<Player> playerList = gameData.getPlayerList();
-				for (int i = 0; i < playerList.size(); i++) {
-					int id = playerList.get(i).getID();
-					if (id == myID) {
-						playerIndex = i;
-						break;
-					}
-				}
 			}
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host " + hostName);

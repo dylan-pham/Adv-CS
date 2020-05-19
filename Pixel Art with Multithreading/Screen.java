@@ -1,4 +1,5 @@
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import java.util.ArrayList;
 import java.io.*;
 import java.net.*;
@@ -17,8 +18,10 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import java.util.HashMap;
 import java.util.Stack;
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
  
-public class Screen extends JPanel implements MouseListener, ActionListener {
+public class Screen extends JPanel implements MouseListener, ActionListener, KeyListener {
     private Square[][] grid;
     private ColorPalette[][] selector;
     private JButton clearButton;
@@ -35,9 +38,13 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
     private Stack<Pair<Pair<Integer, Integer>, RGB>> undoneStates; // keeping track of undone actions for redo
 	private ObjectOutputStream out;
 	private GameData gameData;
+	private boolean showInstructions;
+	private JTextArea instructionsTextArea;
 
     public Screen() {
         setLayout(null);
+		setFocusable(true);
+		addKeyListener(this);
 
         selector = new ColorPalette[8][1];
         selector[0][0] = new ColorPalette(255, 0, 0);
@@ -108,7 +115,14 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
         rows.put(new Pair(270, 290), 13);
         rows.put(new Pair(290, 310), 14);
         rows.put(new Pair(310, 330), 15);
-
+		
+		showInstructions = true;
+		String instructions = "Press \'I\' to show instructions.\n-Select color by clicking on color palette.\n-Click on grid to add paint.\n-All clients can add paint at the same time.\n-NOTE: CLEAR CANNOT BE UNDONE.";
+		instructionsTextArea = new JTextArea(instructions);
+		instructionsTextArea.setBounds(10, 400, 320, 100);
+		instructionsTextArea.setEditable(false);
+		this.add(instructionsTextArea);
+			
         addMouseListener(this);
     }
 
@@ -148,7 +162,7 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
             image = (BufferedImage)(createImage(320, 320));
         }
 
-            //Create a graphics object that draws on the image
+        //Create a graphics object that draws on the image
         Graphics gImage = image.createGraphics();
 
         int x = 0;
@@ -163,7 +177,7 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
             y += 20;
         }
 
-            // writing to file
+        // writing to file
         if (image != null) {
             try {
                 File outputfile = new File("image.png");
@@ -206,8 +220,8 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 		if (gameData != null) {
 			int row = -1;
 			int column = -1;
-
 			int x = e.getX();
+			int y = e.getY();
 
 			for (int i = 0; i < cols.getKeys().size(); i++) {
 				Pair<Integer, Integer> c = cols.getKeys().get(i);
@@ -218,8 +232,6 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 					column = cols.get(cols.getKeys().get(i)).get(0);
 				}
 			}
-
-			int y = e.getY();
 
 			for (int j = 0; j < rows.getKeys().size(); j++) {
 				Pair<Integer, Integer> c = rows.getKeys().get(j);
@@ -235,8 +247,7 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 				previousStates.push(new Pair<Pair<Integer, Integer>, RGB>(new Pair(row, column), new RGB(grid[row][column].getRed(), grid[row][column].getGreen(), grid[row][column].getBlue())));
 				grid[row][column].changeColor(red, green, blue);
 				
-				repaint();
-				try{
+				try {
 					out.reset();
 					out.writeObject(gameData);
 				} catch (IOException ex) {
@@ -278,8 +289,6 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 				green = 192;
 				blue = 203;
 			}
-
-			repaint();
 		}	
     }
 
@@ -289,18 +298,8 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
                 grid[r][c].changeColor(255, 255, 255);
             }
         }
-
-        repaint();
     }
-
-    public void mouseReleased(MouseEvent e) {}
- 
-    public void mouseEntered(MouseEvent e) {}
- 
-    public void mouseExited(MouseEvent e) {}
- 
-    public void mouseClicked(MouseEvent e) {}
-
+    
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == clearButton) {
             clearScreen();
@@ -324,10 +323,14 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 			out.reset();
 			out.writeObject(gameData);
 		} catch (IOException ex) {
-            System.out.println(ex);
-        }
+			System.out.println(ex);
+		}
+    }
 
-		repaint();
+	public void keyPressed(KeyEvent e) {
+		if (e.getKeyCode() == 73) { // i
+			instructionsTextArea.setVisible(!instructionsTextArea.isVisible());
+		}
     }
 
 	@SuppressWarnings("unchecked")
@@ -341,7 +344,6 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 
 		//listens for a stream
 		try {
-
 			//send String to server to test connection
 			out.writeObject("New client connected");
 
@@ -365,11 +367,13 @@ public class Screen extends JPanel implements MouseListener, ActionListener {
 			 System.err.println(e);
 			 System.exit(1);
 		}
-
 	}
+
+	// necessary methods
+    public void keyReleased(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
+    public void mouseClicked(MouseEvent e) {}
 }
-
-
-
-
-

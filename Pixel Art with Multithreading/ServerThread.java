@@ -20,7 +20,6 @@ public class ServerThread implements Runnable{
 			} catch (IOException ex){
 				System.out.println(ex.getMessage());
 			}
-			
 		}
 	}
 	
